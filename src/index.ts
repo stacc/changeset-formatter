@@ -18,12 +18,6 @@ async function getReleaseLine(
   type: string,
   options: Record<string, any> | null
 ) {
-  console.log("[Debug] Processing changeset:", {
-    summary: changeset.summary,
-    commit: changeset.commit,
-    PR: changeset.PR,
-  });
-
   if (!options || !options.repo) {
     throw new Error(
       'Please provide a repo to this changelog generator like this:\n"changelog": ["./changelog-format.js", { "repo": "org/repo" }]'
@@ -31,7 +25,6 @@ async function getReleaseLine(
   }
 
   const repo: string = options.repo;
-  console.log("[Debug] Using repo:", repo);
 
   // Extract PR, commit, and users from the summary
   let prFromSummary: number | undefined;
@@ -43,15 +36,11 @@ async function getReleaseLine(
   const replacedChangelog = changeset.summary
     .replace(/^\s*(?:pr|pull|pull\s+request):\s*#?(\d+)/im, (_, pr) => {
       let num = Number(pr);
-      if (!isNaN(num)) {
-        prFromSummary = num;
-        console.log("[Debug] Found PR from summary:", prFromSummary);
-      }
+      if (!isNaN(num)) prFromSummary = num;
       return "";
     })
     .replace(/^\s*commit:\s*([^\s]+)/im, (_, commit) => {
       commitFromSummary = commit;
-      console.log("[Debug] Found commit from summary:", commitFromSummary);
       return "";
     })
     .replace(
@@ -61,12 +50,10 @@ async function getReleaseLine(
         if (user && !usersFromSummary.includes(user)) {
           usersFromSummary.push(user);
           allAuthors.add(user);
-          console.log("[Debug] Added author from summary:", user);
         }
         if (rest && !usersFromSummary.includes(rest)) {
           usersFromSummary.push(rest);
           allAuthors.add(rest);
-          console.log("[Debug] Added additional author from summary:", rest);
         }
         return "";
       }
@@ -76,7 +63,6 @@ async function getReleaseLine(
       if (user && !usersFromSummary.includes(user)) {
         usersFromSummary.push(user);
         allAuthors.add(user);
-        console.log("[Debug] Added single author from summary:", user);
       }
       return "";
     })
@@ -91,14 +77,12 @@ async function getReleaseLine(
   const githubInfo = await (async () => {
     try {
       if (prFromSummary !== undefined) {
-        console.log("[Debug] Fetching PR info for:", prFromSummary);
         const { links, user } = await getInfoFromPullRequest({
           repo,
           pull: prFromSummary,
         });
         if (user && !hasAuthorOverride) {
           allAuthors.add(user);
-          console.log("[Debug] Added author from PR:", user);
         }
         return { links, user };
       }
@@ -106,23 +90,20 @@ async function getReleaseLine(
       // Use commit from summary or from changeset
       const commitToFetchFrom = commitFromSummary || changeset.commit;
       if (commitToFetchFrom) {
-        console.log("[Debug] Fetching commit info for:", commitToFetchFrom);
         const info = await getInfo({
           repo,
           commit: commitToFetchFrom,
         });
         if (info.user && !hasAuthorOverride) {
           allAuthors.add(info.user);
-          console.log("[Debug] Added author from commit:", info.user);
         }
         return info;
       }
 
-      console.log("[Debug] No PR or commit info found");
       return { links: { commit: null, pull: null }, user: null };
     } catch (error) {
       const err = error as Error;
-      console.warn("[Debug] Error getting GitHub info:", err.message);
+      console.warn(`Error getting GitHub info: ${err.message}`);
       return { links: { commit: null, pull: null }, user: null };
     }
   })();
@@ -132,8 +113,6 @@ async function getReleaseLine(
     prFromSummary ||
     changeset.PR ||
     githubInfo.links?.pull?.match(/#(\d+)/)?.[1];
-
-  console.log("[Debug] Final PR number:", prNumber);
 
   // Build the release line in the requested format
   let result = `- ${firstLine}`;
@@ -146,7 +125,6 @@ async function getReleaseLine(
     result += "\n" + futureLines.map((line) => "  " + line).join("\n");
   }
 
-  console.log("[Debug] Generated release line:", result);
   return result;
 }
 
@@ -207,22 +185,14 @@ async function getDependencyReleaseLine(
 
 // Function to get the credits section
 function getCreditsSection(): string {
-  console.log(
-    "[Debug] Generating credits section. Current authors:",
-    Array.from(allAuthors)
-  );
-
-  if (allAuthors.size === 0) {
-    console.log("[Debug] No authors found, skipping credits section");
-    return "";
-  }
+  if (allAuthors.size === 0) return "";
 
   const authors = Array.from(allAuthors).sort();
   const authorLinks = authors.map((author) => `@${author}`);
 
   if (authorLinks.length === 0) return "";
 
-  let credits = "\n\nCredits\n";
+  let credits = "\n\n**Credits**\n";
   if (authorLinks.length === 1) {
     credits += `Huge thanks to ${authorLinks[0]} for helping!`;
   } else if (authorLinks.length === 2) {
@@ -234,11 +204,8 @@ function getCreditsSection(): string {
     )}, and ${lastAuthor} for helping!`;
   }
 
-  console.log("[Debug] Generated credits section:", credits);
-
   // Clear the authors set for the next changelog
   allAuthors.clear();
-  console.log("[Debug] Cleared authors set for next changelog");
 
   return credits;
 }
@@ -249,25 +216,16 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   type,
   opts
 ) => {
-  console.log("[Debug] wrappedGetReleaseLine called with opts:", opts);
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
   // Add credits section if we have collected any authors
   if (allAuthors.size > 0) {
-    console.log("[Debug] Adding credits section to release line");
     return result + getCreditsSection();
   }
-  console.log("[Debug] No authors collected, skipping credits section");
   return result;
 };
 
 const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
   async (changesets, dependencies, opts) => {
-    console.log("[Debug] wrappedGetDependencyReleaseLine called with:", {
-      changesetCount: changesets.length,
-      dependencyCount: dependencies.length,
-      opts,
-    });
-
     const result = await getDependencyReleaseLine(
       changesets,
       dependencies,
@@ -275,10 +233,8 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
     );
     // Add credits section if we have collected any authors
     if (allAuthors.size > 0) {
-      console.log("[Debug] Adding credits section to dependency release line");
       return result + getCreditsSection();
     }
-    console.log("[Debug] No authors collected, skipping credits section");
     return result;
   };
 
