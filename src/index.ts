@@ -112,13 +112,20 @@ async function getReleaseLine(
   const prNumber =
     prFromSummary ||
     changeset.PR ||
-    githubInfo.links?.pull?.match(/#(\d+)/)?.[1];
+    (githubInfo.links?.pull
+      ? githubInfo.links.pull.match(/#(\d+)/)?.[1]
+      : undefined);
+
+  // Get commit hash for the change
+  const commitHash = commitFromSummary || changeset.commit;
 
   // Build the release line in the requested format
   let result = `- ${firstLine}`;
 
   if (prNumber) {
     result += ` ([#${prNumber}](https://github.com/${repo}/pull/${prNumber}))`;
+  } else if (commitHash) {
+    result += ` ([\`${commitHash}\`](https://github.com/${repo}/commit/${commitHash}))`;
   }
 
   if (futureLines.length > 0) {
@@ -217,8 +224,8 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   opts
 ) => {
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
-  // Add credits section only for the last changeset
-  if (opts?.isLast && allAuthors.size > 0) {
+  // Only add credits section if this is the last changeset
+  if (opts?.isLast) {
     return result + getCreditsSection();
   }
   return result;
@@ -231,8 +238,8 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
       dependencies,
       opts
     );
-    // Add credits section only if there are no regular changesets
-    if (opts?.isLast && changesets.length === 0 && allAuthors.size > 0) {
+    // Only add credits section if this is the last entry and there are no regular changesets
+    if (opts?.isLast && changesets.length === 0) {
       return result + getCreditsSection();
     }
     return result;
