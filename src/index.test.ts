@@ -92,7 +92,7 @@ describe("Changeset formatter", () => {
               )
             );
             expect(result).toEqual(
-              `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\nCredits\nHuge thanks to @Gawdfrey for helping!`
+              `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey for helping!`
             );
           });
         }
@@ -107,7 +107,7 @@ describe("Changeset formatter", () => {
           )
         );
         expect(result).toEqual(
-          `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\nCredits\nHuge thanks to @Gawdfrey for helping!`
+          `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey for helping!`
         );
       });
     }
@@ -124,7 +124,7 @@ describe("Changeset formatter", () => {
           ...getChangeset(content, data.commit, true)
         );
         expect(result).toEqual(
-          `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\nCredits\nHuge thanks to @other for helping!`
+          `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @other for helping!`
         );
       });
     }
@@ -140,7 +140,7 @@ describe("Changeset formatter", () => {
     );
 
     expect(result).toEqual(
-      `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\nCredits\nHuge thanks to @Gawdfrey and @thymas1 for helping!`
+      `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey and @thymas1 for helping!`
     );
   });
 
@@ -167,7 +167,7 @@ describe("Changeset formatter", () => {
         ...getChangeset("author: @huozhi", data.commit, true, "third change")
       );
       expect(lastResult).toEqual(
-        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\nCredits\nHuge thanks to @Gawdfrey, @huozhi, and @thymas1 for helping!`
+        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey, @huozhi, and @thymas1 for helping!`
       );
     });
 
@@ -198,7 +198,7 @@ describe("Changeset formatter", () => {
         )
       );
       expect(lastResult).toEqual(
-        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\nCredits\nHuge thanks to @Gawdfrey, @huozhi, @ijjk, and @thymas1 for helping!`
+        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey, @huozhi, @ijjk, and @thymas1 for helping!`
       );
     });
   });

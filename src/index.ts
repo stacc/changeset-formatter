@@ -217,8 +217,8 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   opts
 ) => {
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
-  // Add credits section if we have collected any authors
-  if (allAuthors.size > 0) {
+  // Add credits section only for the last changeset
+  if (opts?.isLast && allAuthors.size > 0) {
     return result + getCreditsSection();
   }
   return result;
@@ -231,8 +231,8 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
       dependencies,
       opts
     );
-    // Add credits section if we have collected any authors
-    if (allAuthors.size > 0) {
+    // Add credits section only if there are no regular changesets
+    if (opts?.isLast && changesets.length === 0 && allAuthors.size > 0) {
       return result + getCreditsSection();
     }
     return result;
