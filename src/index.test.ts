@@ -164,5 +164,31 @@ describe("Changeset formatter", () => {
         `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey for helping!`
       );
     });
+
+    it("should combine authors from all changes", async () => {
+      // First change with GitHub author
+      const firstResult = await getReleaseLine(
+        ...getChangeset("", data.commit, false, "first change")
+      );
+      expect(firstResult).toEqual(
+        `- first change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))`
+      );
+
+      // Second change with explicit author
+      const secondResult = await getReleaseLine(
+        ...getChangeset("", data.commit, false, "second change")
+      );
+      expect(secondResult).toEqual(
+        `- second change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))`
+      );
+
+      // Last change with multiple authors
+      const lastResult = await getReleaseLine(
+        ...getChangeset("", data.commit, true, "third change")
+      );
+      expect(lastResult).toEqual(
+        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey for helping!`
+      );
+    });
   });
 });
