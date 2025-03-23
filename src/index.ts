@@ -164,12 +164,21 @@ async function getDependencyReleaseLine(
 
 // Function to get the credits section
 function getCreditsSection(): string {
-  if (allAuthors.size === 0) return "";
+  console.log(
+    `[Debug] Generating credits section with ${allAuthors.size} authors`
+  );
+  if (allAuthors.size === 0) {
+    console.log(`[Debug] No authors to credit, skipping credits section`);
+    return "";
+  }
 
   const authors = Array.from(allAuthors).sort();
   const authorLinks = authors.map((author) => `@${author}`);
 
-  if (authorLinks.length === 0) return "";
+  if (authorLinks.length === 0) {
+    console.log(`[Debug] No author links to credit, skipping credits section`);
+    return "";
+  }
 
   let credits = "\n\n**Credits**\n";
   if (authorLinks.length === 1) {
@@ -183,8 +192,10 @@ function getCreditsSection(): string {
     )}, and ${lastAuthor} for helping!`;
   }
 
+  console.log(`[Debug] Generated credits section: ${credits}`);
   // Clear the authors set for the next changelog
   allAuthors.clear();
+  console.log(`[Debug] Cleared authors set for next changelog`);
 
   return credits;
 }
@@ -195,9 +206,14 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   type,
   opts
 ) => {
+  console.log(
+    `[Debug] Processing release line for type: ${type}, isLast: ${opts?.isLast}`
+  );
+  console.log(`[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`);
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
   // Add credits section only if this is the last changeset and we have authors
   if (opts?.isLast && allAuthors.size > 0) {
+    console.log(`[Debug] Adding credits section for ${type} changes`);
     return result + getCreditsSection();
   }
   return result;
@@ -205,13 +221,21 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
 
 const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
   async (changesets, dependencies, opts) => {
+    console.log(
+      `[Debug] Processing dependency release line, isLast: ${opts?.isLast}`
+    );
+    console.log(`[Debug] Number of changesets: ${changesets.length}`);
+    console.log(
+      `[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`
+    );
     const result = await getDependencyReleaseLine(
       changesets,
       dependencies,
       opts
     );
-    // Add credits section only if this is the last entry, there are no regular changesets, and we have authors
-    if (opts?.isLast && changesets.length === 0 && allAuthors.size > 0) {
+    // Add credits section only if this is the last entry and we have authors
+    if (opts?.isLast && allAuthors.size > 0) {
+      console.log(`[Debug] Adding credits section for dependency changes`);
       return result + getCreditsSection();
     }
     return result;
