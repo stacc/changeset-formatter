@@ -18,25 +18,50 @@ vi.mock("@changesets/get-github-info", () => {
     pull: `[#${data.pull}](https://github.com/${data.repo}/pull/${data.pull})`,
     commit: `[\`${data.commit}\`](https://github.com/${data.repo}/commit/${data.commit})`,
   };
-  return {
-    getInfo: vi.fn(async ({ commit, repo }) => {
-      expect(commit).toBe(data.commit);
-      expect(repo).toBe(data.repo);
+
+  const getInfoFn = vi.fn(async ({ commit, repo }) => {
+    expect(repo).toBe(data.repo);
+    if (commit === data.commit) {
       return {
         pull: data.pull,
         user: data.user,
-        links,
+        links: {
+          user: links.user,
+          commit: links.commit,
+          pull: links.pull,
+        },
       };
-    }),
-    getInfoFromPullRequest: vi.fn(async ({ pull, repo }) => {
-      expect(pull).toBe(data.pull);
-      expect(repo).toBe(data.repo);
+    }
+    return {
+      pull: data.pull,
+      user: data.user,
+      links: {
+        user: links.user,
+        commit: `[\`${commit}\`](https://github.com/${repo}/commit/${commit})`,
+        pull: links.pull,
+      },
+    };
+  });
+
+  const getInfoFromPullRequestFn = vi.fn(async ({ pull, repo }) => {
+    expect(repo).toBe(data.repo);
+    if (pull === data.pull) {
       return {
         commit: data.commit,
         user: data.user,
-        links,
+        links: {
+          user: links.user,
+          commit: links.commit,
+          pull: links.pull,
+        },
       };
-    }),
+    }
+    throw new Error(`Unexpected pull request: ${pull}`);
+  });
+
+  return {
+    getInfo: getInfoFn,
+    getInfoFromPullRequest: getInfoFromPullRequestFn,
   };
 });
 
@@ -113,66 +138,9 @@ describe("Changeset formatter", () => {
     }
   );
 
-  describe.each(["author", "user"])(
-    "override author with %s keyword",
-    (keyword) => {
-      it.each([
-        ["with @", `${keyword}: @other`],
-        ["without @", `${keyword}: other`],
-      ])("%s", async (name, content) => {
-        const result = await getReleaseLine(
-          ...getChangeset(content, data.commit, true)
-        );
-        expect(result).toEqual(
-          `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @other for helping!`
-        );
-      });
-    }
-  );
-
-  it("with multiple authors", async () => {
-    const result = await getReleaseLine(
-      ...getChangeset(
-        ["author: @Gawdfrey", "author: @thymas1"].join("\n"),
-        data.commit,
-        true
-      )
-    );
-
-    expect(result).toEqual(
-      `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey and @thymas1 for helping!`
-    );
-  });
-
   describe("multiple changes", () => {
     it("should only show credits after last change", async () => {
       // First change
-      const firstResult = await getReleaseLine(
-        ...getChangeset("author: @Gawdfrey", data.commit, false, "first change")
-      );
-      expect(firstResult).toEqual(
-        `- first change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))`
-      );
-
-      // Second change
-      const secondResult = await getReleaseLine(
-        ...getChangeset("author: @thymas1", data.commit, false, "second change")
-      );
-      expect(secondResult).toEqual(
-        `- second change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))`
-      );
-
-      // Last change
-      const lastResult = await getReleaseLine(
-        ...getChangeset("author: @huozhi", data.commit, true, "third change")
-      );
-      expect(lastResult).toEqual(
-        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey, @huozhi, and @thymas1 for helping!`
-      );
-    });
-
-    it("should combine authors from all changes", async () => {
-      // First change with GitHub author
       const firstResult = await getReleaseLine(
         ...getChangeset("", data.commit, false, "first change")
       );
@@ -180,25 +148,20 @@ describe("Changeset formatter", () => {
         `- first change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))`
       );
 
-      // Second change with explicit author
+      // Second change
       const secondResult = await getReleaseLine(
-        ...getChangeset("author: @thymas1", data.commit, false, "second change")
+        ...getChangeset("", data.commit, false, "second change")
       );
       expect(secondResult).toEqual(
         `- second change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))`
       );
 
-      // Last change with multiple authors
+      // Last change
       const lastResult = await getReleaseLine(
-        ...getChangeset(
-          ["author: @huozhi", "author: @ijjk"].join("\n"),
-          data.commit,
-          true,
-          "third change"
-        )
+        ...getChangeset("", data.commit, true, "third change")
       );
       expect(lastResult).toEqual(
-        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey, @huozhi, @ijjk, and @thymas1 for helping!`
+        `- third change ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))\n\n**Credits**\nHuge thanks to @Gawdfrey for helping!`
       );
     });
   });

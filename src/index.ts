@@ -29,8 +29,6 @@ async function getReleaseLine(
   // Extract PR, commit, and users from the summary
   let prFromSummary: number | undefined;
   let commitFromSummary: string | undefined;
-  let usersFromSummary: string[] = [];
-  let hasAuthorOverride = false;
 
   // Process the changeset summary to extract metadata
   const replacedChangelog = changeset.summary
@@ -41,29 +39,6 @@ async function getReleaseLine(
     })
     .replace(/^\s*commit:\s*([^\s]+)/im, (_, commit) => {
       commitFromSummary = commit;
-      return "";
-    })
-    .replace(
-      /^\s*(?:author|user):\s*@?([^\s,]+)(?:\s*,\s*@?([^\s,]+))*/gim,
-      (_, user, rest) => {
-        hasAuthorOverride = true;
-        if (user && !usersFromSummary.includes(user)) {
-          usersFromSummary.push(user);
-          allAuthors.add(user);
-        }
-        if (rest && !usersFromSummary.includes(rest)) {
-          usersFromSummary.push(rest);
-          allAuthors.add(rest);
-        }
-        return "";
-      }
-    )
-    .replace(/^\s*(?:author|user):\s*@?([^\s,]+)/gim, (_, user) => {
-      hasAuthorOverride = true;
-      if (user && !usersFromSummary.includes(user)) {
-        usersFromSummary.push(user);
-        allAuthors.add(user);
-      }
       return "";
     })
     .trim();
@@ -81,7 +56,7 @@ async function getReleaseLine(
           repo,
           pull: prFromSummary,
         });
-        if (user && !hasAuthorOverride) {
+        if (user) {
           allAuthors.add(user);
         }
         return { links, user };
@@ -94,7 +69,7 @@ async function getReleaseLine(
           repo,
           commit: commitToFetchFrom,
         });
-        if (info.user && !hasAuthorOverride) {
+        if (info.user) {
           allAuthors.add(info.user);
         }
         return info;
@@ -116,16 +91,13 @@ async function getReleaseLine(
       ? githubInfo.links.pull.match(/#(\d+)/)?.[1]
       : undefined);
 
-  // Get commit hash for the change
-  const commitHash = commitFromSummary || changeset.commit;
-
   // Build the release line in the requested format
   let result = `- ${firstLine}`;
 
   if (prNumber) {
     result += ` ([#${prNumber}](https://github.com/${repo}/pull/${prNumber}))`;
-  } else if (commitHash) {
-    result += ` ([\`${commitHash}\`](https://github.com/${repo}/commit/${commitHash}))`;
+  } else if (githubInfo.links?.commit) {
+    result += ` (${githubInfo.links.commit})`;
   }
 
   if (futureLines.length > 0) {
