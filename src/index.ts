@@ -12,6 +12,7 @@ interface ChangesetWithPR extends NewChangesetWithCommit {
 
 // Keep track of all authors across changesets
 let allAuthors = new Set<string>();
+let isLastPatch = false;
 
 async function getReleaseLine(
   changeset: ChangesetWithPR,
@@ -206,13 +207,16 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   type,
   opts
 ) => {
-  console.log(
-    `[Debug] Processing release line for type: ${type}, isLast: ${opts?.isLast}`
-  );
+  console.log(`[Debug] Processing release line for type: ${type}`);
   console.log(`[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`);
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
-  // Add credits section only if this is the last changeset and we have authors
-  if (opts?.isLast && allAuthors.size > 0) {
+
+  // Add credits section to the last patch change
+  if (type === "patch" && allAuthors.size > 0) {
+    isLastPatch = true;
+  }
+
+  if (isLastPatch && type === "patch" && allAuthors.size > 0) {
     console.log(`[Debug] Adding credits section for ${type} changes`);
     return result + getCreditsSection();
   }
@@ -221,9 +225,7 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
 
 const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
   async (changesets, dependencies, opts) => {
-    console.log(
-      `[Debug] Processing dependency release line, isLast: ${opts?.isLast}`
-    );
+    console.log(`[Debug] Processing dependency release line`);
     console.log(`[Debug] Number of changesets: ${changesets.length}`);
     console.log(
       `[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`
@@ -233,8 +235,9 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
       dependencies,
       opts
     );
+
     // Add credits section only if this is the last entry and we have authors
-    if (opts?.isLast && allAuthors.size > 0) {
+    if (changesets.length === 0 && allAuthors.size > 0) {
       console.log(`[Debug] Adding credits section for dependency changes`);
       return result + getCreditsSection();
     }
