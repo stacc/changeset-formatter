@@ -12,7 +12,7 @@ interface ChangesetWithPR extends NewChangesetWithCommit {
 
 // Keep track of all authors across changesets
 let allAuthors = new Set<string>();
-let isLastPatch = false;
+let patchChanges = new Set<string>();
 
 async function getReleaseLine(
   changeset: ChangesetWithPR,
@@ -211,9 +211,16 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   console.log(`[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`);
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
 
-  // Add credits section only to patch changes or when isLast is true
-  if ((opts?.isLast || type === "patch") && allAuthors.size > 0) {
+  // Track patch changes
+  if (type === "patch") {
+    patchChanges.add(changeset.summary);
+  }
+
+  // Add credits section only if this is the last entry and we have authors
+  if (opts?.isLast && allAuthors.size > 0) {
     console.log(`[Debug] Adding credits section for ${type} changes`);
+    // Clear patch changes for next changelog
+    patchChanges.clear();
     return result + getCreditsSection();
   }
   return result;
@@ -235,6 +242,8 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
     // Add credits section only if this is the last entry and we have authors
     if (opts?.isLast && allAuthors.size > 0) {
       console.log(`[Debug] Adding credits section for dependency changes`);
+      // Clear patch changes for next changelog
+      patchChanges.clear();
       return result + getCreditsSection();
     }
     return result;
