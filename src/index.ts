@@ -17,7 +17,6 @@ let hasAddedCredits = false; // Track if we've added credits in this changelog
 
 // Reset function to be called at the start of each changelog generation
 function resetChangelogState() {
-  console.log(`[Debug] Resetting changelog state`);
   allAuthors.clear();
   patchChanges.clear();
   hasAddedCredits = false;
@@ -174,16 +173,11 @@ async function getDependencyReleaseLine(
 
 // Function to get the credits section
 function getCreditsSection(): string {
-  console.log(
-    `[Debug] Generating credits section with ${allAuthors.size} authors`
-  );
   if (allAuthors.size === 0) {
-    console.log(`[Debug] No authors to credit, skipping credits section`);
     return "";
   }
 
   if (hasAddedCredits) {
-    console.log(`[Debug] Credits already added in this changelog, skipping`);
     return "";
   }
 
@@ -191,7 +185,6 @@ function getCreditsSection(): string {
   const authorLinks = authors.map((author) => `@${author}`);
 
   if (authorLinks.length === 0) {
-    console.log(`[Debug] No author links to credit, skipping credits section`);
     return "";
   }
 
@@ -207,7 +200,6 @@ function getCreditsSection(): string {
     )}, and ${lastAuthor} for helping!`;
   }
 
-  console.log(`[Debug] Generated credits section: ${credits}`);
   hasAddedCredits = true;
   return credits;
 }
@@ -218,8 +210,6 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   type,
   opts
 ) => {
-  console.log(`[Debug] Processing release line for type: ${type}`);
-  console.log(`[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`);
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
 
   // Track patch changes
@@ -232,11 +222,6 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
 
 const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
   async (changesets, dependencies, opts) => {
-    console.log(`[Debug] Processing dependency release line`);
-    console.log(`[Debug] Number of changesets: ${changesets.length}`);
-    console.log(
-      `[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`
-    );
     const result = await getDependencyReleaseLine(
       changesets,
       dependencies,
@@ -245,7 +230,6 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
 
     // Add credits section if we have authors
     if (allAuthors.size > 0 && !hasAddedCredits) {
-      console.log(`[Debug] Adding credits section for all changes`);
       const credits = getCreditsSection();
       // Reset state after adding credits
       resetChangelogState();
