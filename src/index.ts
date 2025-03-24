@@ -175,10 +175,6 @@ function getCreditsSection(): string {
     return "";
   }
 
-  if (hasAddedCredits) {
-    return "";
-  }
-
   const authors = Array.from(allAuthors).sort();
   const authorLinks = authors.map((author) => `@${author}`);
 
@@ -198,7 +194,6 @@ function getCreditsSection(): string {
     )}, and ${lastAuthor} for helping!`;
   }
 
-  hasAddedCredits = true;
   return credits;
 }
 
@@ -209,15 +204,7 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   opts
 ) => {
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
-
-  // Add credits section if this is the last entry and we have authors
-  if (allAuthors.size > 0 && !hasAddedCredits) {
-    const credits = getCreditsSection();
-    // Reset state after adding credits
-    resetChangelogState();
-    return result + credits;
-  }
-  return result;
+  return result + getCreditsSection();
 };
 
 const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
@@ -227,15 +214,7 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
       dependencies,
       opts
     );
-
-    // Add credits section if this is the last entry and we have authors
-    if (allAuthors.size > 0 && !hasAddedCredits) {
-      const credits = getCreditsSection();
-      // Reset state after adding credits
-      resetChangelogState();
-      return result + credits;
-    }
-    return result;
+    return result + getCreditsSection();
   };
 
 const defaultChangelogFunctions: ChangelogFunctions = {
