@@ -175,6 +175,7 @@ async function getDependencyReleaseLine(
 // Function to get the credits section
 function getCreditsSection(): string {
   const authors = Array.from(allAuthors).sort();
+  console.log(`[Debug] Authors: ${authors}`);
   const authorLinks = authors.map((author) => `@${author}`);
 
   if (authorLinks.length === 0) {
@@ -220,6 +221,7 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
       opts
     );
 
+    console.log(`[Debug] Authors: ${allAuthors}`);
     // Add credits section if we have authors
     if (allAuthors.size > 0) {
       const credits = getCreditsSection();
