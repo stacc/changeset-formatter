@@ -12,13 +12,6 @@ interface ChangesetWithPR extends NewChangesetWithCommit {
 
 // Keep track of all authors across changesets
 let allAuthors = new Set<string>();
-let hasAddedCredits = false; // Track if we've added credits in this changelog
-
-// Reset function to be called at the start of each changelog generation
-function resetChangelogState() {
-  allAuthors.clear();
-  hasAddedCredits = false;
-}
 
 async function getReleaseLine(
   changeset: ChangesetWithPR,
@@ -169,7 +162,7 @@ async function getDependencyReleaseLine(
   return [changesetLink, ...updatedDependenciesList].join("\n");
 }
 
-// Function to get the credits section
+// TODO: Figure out how to add credits section to the bottom of the changelog
 function getCreditsSection(): string {
   if (allAuthors.size === 0) {
     return "";
@@ -197,29 +190,9 @@ function getCreditsSection(): string {
   return credits;
 }
 
-// Adapter functions to match the ChangelogFunctions type
-const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
-  changeset,
-  type,
-  opts
-) => {
-  const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
-  return result + getCreditsSection();
-};
-
-const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
-  async (changesets, dependencies, opts) => {
-    const result = await getDependencyReleaseLine(
-      changesets,
-      dependencies,
-      opts
-    );
-    return result + getCreditsSection();
-  };
-
 const defaultChangelogFunctions: ChangelogFunctions = {
-  getReleaseLine: wrappedGetReleaseLine,
-  getDependencyReleaseLine: wrappedGetDependencyReleaseLine,
+  getReleaseLine,
+  getDependencyReleaseLine,
 };
 
 export default defaultChangelogFunctions;
