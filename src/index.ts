@@ -14,6 +14,7 @@ interface ChangesetWithPR extends NewChangesetWithCommit {
 let allAuthors = new Set<string>();
 let patchChanges = new Set<string>();
 let hasAddedCredits = false; // Track if we've added credits in this changelog
+let isFirstEntry = true; // Track if this is the first entry in the changelog
 
 // Reset function to be called at the start of each changelog generation
 function resetChangelogState() {
@@ -21,6 +22,7 @@ function resetChangelogState() {
   allAuthors.clear();
   patchChanges.clear();
   hasAddedCredits = false;
+  isFirstEntry = true;
 }
 
 async function getReleaseLine(
@@ -219,8 +221,9 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   opts
 ) => {
   // Reset state if this is the first entry
-  if (!opts?.isLast) {
+  if (isFirstEntry) {
     resetChangelogState();
+    isFirstEntry = false;
   }
 
   console.log(`[Debug] Processing release line for type: ${type}`);
@@ -247,8 +250,9 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
 const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
   async (changesets, dependencies, opts) => {
     // Reset state if this is the first entry
-    if (!opts?.isLast) {
+    if (isFirstEntry) {
       resetChangelogState();
+      isFirstEntry = false;
     }
 
     console.log(`[Debug] Processing dependency release line`);
