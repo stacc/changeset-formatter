@@ -221,7 +221,7 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
       opts
     );
 
-    console.log(`[Debug] Authors: ${allAuthors}`);
+    console.log(`[Debug] Authors: ${allAuthors.size}`);
     // Add credits section if we have authors
     if (allAuthors.size > 0) {
       const credits = getCreditsSection();
