@@ -16,7 +16,6 @@
     "publish": "pnpm publish --no-git-checks",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm run build && changeset publish",
     "test": "vitest"
   },
   "publishConfig": {
