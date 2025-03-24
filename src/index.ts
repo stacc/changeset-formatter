@@ -12,12 +12,12 @@ interface ChangesetWithPR extends NewChangesetWithCommit {
 
 // Keep track of all authors across changesets
 let allAuthors = new Set<string>();
-let patchChanges = new Set<string>();
+let hasAddedCredits = false; // Track if we've added credits in this changelog
 
 // Reset function to be called at the start of each changelog generation
 function resetChangelogState() {
   allAuthors.clear();
-  patchChanges.clear();
+  hasAddedCredits = false;
 }
 
 async function getReleaseLine(
@@ -63,7 +63,6 @@ async function getReleaseLine(
           repo,
           pull: prFromSummary,
         });
-        console.log(`[Debug] Pull request info: ${user}`);
         if (user) {
           allAuthors.add(user);
         }
@@ -77,7 +76,6 @@ async function getReleaseLine(
           repo,
           commit: commitToFetchFrom,
         });
-        console.log(`[Debug] Commit info: ${info.user}`);
         if (info.user) {
           allAuthors.add(info.user);
         }
@@ -140,7 +138,6 @@ async function getDependencyReleaseLine(
             repo,
             commit: cs.commit,
           });
-          console.log(`[Debug] Commit info: ${user}`);
           if (user) {
             allAuthors.add(user);
           }
@@ -174,8 +171,15 @@ async function getDependencyReleaseLine(
 
 // Function to get the credits section
 function getCreditsSection(): string {
+  if (allAuthors.size === 0) {
+    return "";
+  }
+
+  if (hasAddedCredits) {
+    return "";
+  }
+
   const authors = Array.from(allAuthors).sort();
-  console.log(`[Debug] Authors: ${authors}`);
   const authorLinks = authors.map((author) => `@${author}`);
 
   if (authorLinks.length === 0) {
@@ -194,6 +198,7 @@ function getCreditsSection(): string {
     )}, and ${lastAuthor} for helping!`;
   }
 
+  hasAddedCredits = true;
   return credits;
 }
 
@@ -205,11 +210,13 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
 ) => {
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
 
-  // Track patch changes
-  if (type === "patch") {
-    patchChanges.add(changeset.summary);
+  // Add credits section if this is the last entry and we have authors
+  if (allAuthors.size > 0 && !hasAddedCredits) {
+    const credits = getCreditsSection();
+    // Reset state after adding credits
+    resetChangelogState();
+    return result + credits;
   }
-
   return result;
 };
 
@@ -221,9 +228,8 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
       opts
     );
 
-    console.log(`[Debug] Authors: ${allAuthors.size}`);
-    // Add credits section if we have authors
-    if (allAuthors.size > 0) {
+    // Add credits section if this is the last entry and we have authors
+    if (allAuthors.size > 0 && !hasAddedCredits) {
       const credits = getCreditsSection();
       // Reset state after adding credits
       resetChangelogState();
