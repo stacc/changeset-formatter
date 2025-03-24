@@ -13,6 +13,18 @@ interface ChangesetWithPR extends NewChangesetWithCommit {
 // Keep track of all authors across changesets
 let allAuthors = new Set<string>();
 let patchChanges = new Set<string>();
+let hasAddedCredits = false; // Track if we've added credits in this changelog
+
+// Reset function to be called at the start of each changelog generation
+function resetChangelogState() {
+  console.log(`[Debug] Resetting changelog state`);
+  allAuthors.clear();
+  patchChanges.clear();
+  hasAddedCredits = false;
+}
+
+// Call reset at the start of each changelog generation
+resetChangelogState();
 
 async function getReleaseLine(
   changeset: ChangesetWithPR,
@@ -173,6 +185,11 @@ function getCreditsSection(): string {
     return "";
   }
 
+  if (hasAddedCredits) {
+    console.log(`[Debug] Credits already added in this changelog, skipping`);
+    return "";
+  }
+
   const authors = Array.from(allAuthors).sort();
   const authorLinks = authors.map((author) => `@${author}`);
 
@@ -194,10 +211,7 @@ function getCreditsSection(): string {
   }
 
   console.log(`[Debug] Generated credits section: ${credits}`);
-  // Clear the authors set for the next changelog
-  allAuthors.clear();
-  console.log(`[Debug] Cleared authors set for next changelog`);
-
+  hasAddedCredits = true;
   return credits;
 }
 
@@ -209,6 +223,7 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
 ) => {
   console.log(`[Debug] Processing release line for type: ${type}`);
   console.log(`[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`);
+  console.log(`[Debug] isLast: ${opts?.isLast}`);
   const result = await getReleaseLine(changeset as ChangesetWithPR, type, opts);
 
   // Track patch changes
@@ -217,10 +232,8 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   }
 
   // Add credits section only if this is the last entry and we have authors
-  if (opts?.isLast && allAuthors.size > 0) {
+  if (opts?.isLast && allAuthors.size > 0 && !hasAddedCredits) {
     console.log(`[Debug] Adding credits section for ${type} changes`);
-    // Clear patch changes for next changelog
-    patchChanges.clear();
     return result + getCreditsSection();
   }
   return result;
@@ -233,6 +246,7 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
     console.log(
       `[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`
     );
+    console.log(`[Debug] isLast: ${opts?.isLast}`);
     const result = await getDependencyReleaseLine(
       changesets,
       dependencies,
@@ -240,10 +254,8 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
     );
 
     // Add credits section only if this is the last entry and we have authors
-    if (opts?.isLast && allAuthors.size > 0) {
+    if (opts?.isLast && allAuthors.size > 0 && !hasAddedCredits) {
       console.log(`[Debug] Adding credits section for dependency changes`);
-      // Clear patch changes for next changelog
-      patchChanges.clear();
       return result + getCreditsSection();
     }
     return result;
