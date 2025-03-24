@@ -23,9 +23,6 @@ function resetChangelogState() {
   hasAddedCredits = false;
 }
 
-// Call reset at the start of each changelog generation
-resetChangelogState();
-
 async function getReleaseLine(
   changeset: ChangesetWithPR,
   type: string,
@@ -221,6 +218,11 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   type,
   opts
 ) => {
+  // Reset state if this is the first entry
+  if (!opts?.isLast) {
+    resetChangelogState();
+  }
+
   console.log(`[Debug] Processing release line for type: ${type}`);
   console.log(`[Debug] Current authors: ${Array.from(allAuthors).join(", ")}`);
   console.log(`[Debug] isLast: ${opts?.isLast}`);
@@ -234,13 +236,21 @@ const wrappedGetReleaseLine: ChangelogFunctions["getReleaseLine"] = async (
   // Add credits section only if this is the last entry and we have authors
   if (opts?.isLast && allAuthors.size > 0 && !hasAddedCredits) {
     console.log(`[Debug] Adding credits section for ${type} changes`);
-    return result + getCreditsSection();
+    const credits = getCreditsSection();
+    // Reset state after adding credits
+    resetChangelogState();
+    return result + credits;
   }
   return result;
 };
 
 const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseLine"] =
   async (changesets, dependencies, opts) => {
+    // Reset state if this is the first entry
+    if (!opts?.isLast) {
+      resetChangelogState();
+    }
+
     console.log(`[Debug] Processing dependency release line`);
     console.log(`[Debug] Number of changesets: ${changesets.length}`);
     console.log(
@@ -256,7 +266,10 @@ const wrappedGetDependencyReleaseLine: ChangelogFunctions["getDependencyReleaseL
     // Add credits section only if this is the last entry and we have authors
     if (opts?.isLast && allAuthors.size > 0 && !hasAddedCredits) {
       console.log(`[Debug] Adding credits section for dependency changes`);
-      return result + getCreditsSection();
+      const credits = getCreditsSection();
+      // Reset state after adding credits
+      resetChangelogState();
+      return result + credits;
     }
     return result;
   };
