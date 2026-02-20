@@ -1,5 +1,11 @@
 # @stacc/changeset-formatter
 
+## 0.2.1
+
+### Patch Changes
+
+- - ⚙️ **Chore**: Republish with ticket URL support ([`8682553`](https://github.com/stacc/changeset-formatter/commit/8682553df212cc8b679c33a6da2c21fee615a80b))
+
 ## 0.2.0
 
 ### Minor Changes
