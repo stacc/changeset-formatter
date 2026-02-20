@@ -29,7 +29,7 @@ async function getReleaseLine(
   // Extract PR, commit, ticket, and users from the summary
   let prFromSummary: number | undefined;
   let commitFromSummary: string | undefined;
-  let ticketRef: string | undefined;
+  const ticketRefs: string[] = [];
 
   // Process the changeset summary to extract metadata
   const replacedChangelog = changeset.summary
@@ -42,8 +42,8 @@ async function getReleaseLine(
       commitFromSummary = commit;
       return "";
     })
-    .replace(/^\s*ticket:\s*(\S+)/im, (_, ticket) => {
-      ticketRef = ticket;
+    .replace(/^\s*ticket:\s*(\S+)/gim, (_, ticket) => {
+      ticketRefs.push(ticket);
       return "";
     })
     .trim();
@@ -108,9 +108,11 @@ async function getReleaseLine(
     refs.push(githubInfo.links.commit);
   }
 
-  if (ticketRef && (ticketRef.startsWith("http://") || ticketRef.startsWith("https://"))) {
-    const label = ticketRef.split("/").pop() || ticketRef;
-    refs.push(`[${label}](${ticketRef})`);
+  for (const ticket of ticketRefs) {
+    if (ticket.startsWith("http://") || ticket.startsWith("https://")) {
+      const label = ticket.split("/").pop() || ticket;
+      refs.push(`[${label}](${ticket})`);
+    }
   }
 
   if (refs.length > 0) {

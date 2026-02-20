@@ -153,6 +153,19 @@ describe("Changeset formatter", () => {
       );
     });
 
+    it("should support multiple ticket URLs", async () => {
+      const result = await getReleaseLine(
+        ...getChangeset(
+          "ticket: https://stacc-as.atlassian.net/browse/PRO-142\nticket: https://github.com/stacc/mortgage/issues/99",
+          data.commit,
+          true,
+        )
+      );
+      expect(result).toEqual(
+        `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}) | [PRO-142](https://stacc-as.atlassian.net/browse/PRO-142) | [99](https://github.com/stacc/mortgage/issues/99))`
+      );
+    });
+
     it("should ignore non-URL ticket values", async () => {
       const result = await getReleaseLine(
         ...getChangeset(
