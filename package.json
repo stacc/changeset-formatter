@@ -1,6 +1,6 @@
 {
   "name": "@stacc/changeset-formatter",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A custom formatter for changesets",
   "type": "commonjs",
   "main": "dist/index.js",
