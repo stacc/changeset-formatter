@@ -77,7 +77,8 @@ const getChangeset = (
   content: string,
   commit: string | undefined,
   isLast = false,
-  summary?: string
+  summary?: string,
+  extraOptions?: Record<string, any>
 ) => {
   return [
     {
@@ -94,7 +95,7 @@ const getChangeset = (
       commit,
     },
     "minor",
-    { repo: data.repo, isLast },
+    { repo: data.repo, isLast, ...extraOptions },
   ] as const;
 };
 
@@ -137,6 +138,34 @@ describe("Changeset formatter", () => {
       });
     }
   );
+
+  describe("ticket references", () => {
+    it("should append full URL ticket as link", async () => {
+      const result = await getReleaseLine(
+        ...getChangeset(
+          "ticket: https://stacc-as.atlassian.net/browse/PRO-142",
+          data.commit,
+          true,
+        )
+      );
+      expect(result).toEqual(
+        `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}) | [PRO-142](https://stacc-as.atlassian.net/browse/PRO-142))`
+      );
+    });
+
+    it("should ignore non-URL ticket values", async () => {
+      const result = await getReleaseLine(
+        ...getChangeset(
+          "ticket: PRO-142",
+          data.commit,
+          true,
+        )
+      );
+      expect(result).toEqual(
+        `- something ([#${data.pull}](https://github.com/${data.repo}/pull/${data.pull}))`
+      );
+    });
+  });
 
   describe.skip("multiple changes", () => {
     it("should only show credits after last change", async () => {

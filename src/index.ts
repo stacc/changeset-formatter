@@ -26,9 +26,10 @@ async function getReleaseLine(
 
   const repo: string = options.repo;
 
-  // Extract PR, commit, and users from the summary
+  // Extract PR, commit, ticket, and users from the summary
   let prFromSummary: number | undefined;
   let commitFromSummary: string | undefined;
+  let ticketRef: string | undefined;
 
   // Process the changeset summary to extract metadata
   const replacedChangelog = changeset.summary
@@ -39,6 +40,10 @@ async function getReleaseLine(
     })
     .replace(/^\s*commit:\s*([^\s]+)/im, (_, commit) => {
       commitFromSummary = commit;
+      return "";
+    })
+    .replace(/^\s*ticket:\s*(\S+)/im, (_, ticket) => {
+      ticketRef = ticket;
       return "";
     })
     .trim();
@@ -94,10 +99,22 @@ async function getReleaseLine(
   // Build the release line in the requested format
   let result = `- ${firstLine}`;
 
+  // Append reference links: PR and/or Jira
+  const refs: string[] = [];
+
   if (prNumber) {
-    result += ` ([#${prNumber}](https://github.com/${repo}/pull/${prNumber}))`;
+    refs.push(`[#${prNumber}](https://github.com/${repo}/pull/${prNumber})`);
   } else if (githubInfo.links?.commit) {
-    result += ` (${githubInfo.links.commit})`;
+    refs.push(githubInfo.links.commit);
+  }
+
+  if (ticketRef && (ticketRef.startsWith("http://") || ticketRef.startsWith("https://"))) {
+    const label = ticketRef.split("/").pop() || ticketRef;
+    refs.push(`[${label}](${ticketRef})`);
+  }
+
+  if (refs.length > 0) {
+    result += ` (${refs.join(" | ")})`;
   }
 
   if (futureLines.length > 0) {
