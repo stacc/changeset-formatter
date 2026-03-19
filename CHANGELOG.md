@@ -1,5 +1,11 @@
 # @stacc/changeset-formatter
 
+## 0.2.3
+
+### Patch Changes
+
+- fix: suppress "Updated dependencies" lines in changelogs — internal dependency bumps are implementation details that add noise ([#25](https://github.com/stacc/changeset-formatter/pull/25))
+
 ## 0.2.2
 
 ### Patch Changes
