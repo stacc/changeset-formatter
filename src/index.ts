@@ -132,58 +132,14 @@ async function getReleaseLine(
 }
 
 async function getDependencyReleaseLine(
-  changesets: NewChangesetWithCommit[],
-  dependenciesUpdated: ModCompWithPackage[],
-  options: Record<string, any> | null
+  _changesets: NewChangesetWithCommit[],
+  _dependenciesUpdated: ModCompWithPackage[],
+  _options: Record<string, any> | null
 ) {
-  if (!options || !options.repo) {
-    throw new Error(
-      'Please provide a repo to this changelog generator like this:\n"changelog": ["./changelog-format.js", { "repo": "org/repo" }]'
-    );
-  }
-
-  const repo: string = options.repo;
-
-  if (dependenciesUpdated.length === 0) return "";
-
-  // Get commit links for all changesets
-  const changesetLinks = await Promise.all(
-    changesets.map(async (cs) => {
-      if (cs.commit) {
-        try {
-          const { links, user } = await getInfo({
-            repo,
-            commit: cs.commit,
-          });
-          if (user) {
-            allAuthors.add(user);
-          }
-          return links.commit;
-        } catch (error) {
-          const err = error as Error;
-          console.warn(`Error getting commit info: ${err.message}`);
-          return null;
-        }
-      }
-      return null;
-    })
-  );
-
-  // Filter out null links
-  const filteredLinks = changesetLinks.filter(Boolean);
-
-  // Create the dependency update line
-  const changesetLink =
-    filteredLinks.length > 0
-      ? `Updated dependencies [${filteredLinks.join(", ")}]:`
-      : "Updated dependencies:";
-
-  // List updated dependencies
-  const updatedDependenciesList = dependenciesUpdated.map(
-    (dependency) => `  - ${dependency.name}@${dependency.newVersion}`
-  );
-
-  return [changesetLink, ...updatedDependenciesList].join("\n");
+  // Suppress "Updated dependencies" lines in changelogs.
+  // Internal dependency bumps (e.g. @repo/schemas) are implementation details
+  // that add noise to module changelogs without providing useful context.
+  return "";
 }
 
 // TODO: Figure out how to add credits section to the bottom of the changelog

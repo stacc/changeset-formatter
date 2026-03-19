@@ -235,6 +235,18 @@ describe("Changeset formatter", () => {
     });
   });
 
+  describe("dependency release line", () => {
+    it("should return empty string to suppress dependency update noise", async () => {
+      const getDependencyReleaseLine = changelogFunctions.getDependencyReleaseLine;
+      const result = await getDependencyReleaseLine(
+        [],
+        [{ name: "@repo/schemas", newVersion: "1.5.0", oldVersion: "1.4.0", changesets: [], type: "minor" } as any],
+        { repo: data.repo },
+      );
+      expect(result).toEqual("");
+    });
+  });
+
   describe.skip("multiple changes", () => {
     it("should only show credits after last change", async () => {
       // First change
