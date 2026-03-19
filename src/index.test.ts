@@ -180,6 +180,61 @@ describe("Changeset formatter", () => {
     });
   });
 
+  describe("list formatting", () => {
+    it("should preserve markdown list items without double-nesting", async () => {
+      const result = await getReleaseLine(
+        ...getChangeset(
+          "",
+          data.commit,
+          true,
+          "- 🐛 **Bug** (credit-decision): Fix race condition\n- 🔌 **API** (party): Add error codes",
+        )
+      );
+      expect(result).toContain("- 🐛 **Bug** (credit-decision): Fix race condition");
+      expect(result).toContain("- 🔌 **API** (party): Add error codes");
+      expect(result).not.toContain("- - ");
+    });
+
+    it("should still add bullet for plain text summaries", async () => {
+      const result = await getReleaseLine(
+        ...getChangeset(
+          "",
+          data.commit,
+          true,
+          "Fix something important",
+        )
+      );
+      expect(result).toMatch(/^- Fix something important/);
+    });
+
+    it("should handle mixed list and non-list lines", async () => {
+      const result = await getReleaseLine(
+        ...getChangeset(
+          "",
+          data.commit,
+          true,
+          "- 🐛 **Bug**: Fix race condition\nSome additional context",
+        )
+      );
+      expect(result).toContain("- 🐛 **Bug**: Fix race condition");
+      expect(result).toContain("  Some additional context");
+    });
+
+    it("should append ticket refs to first list item", async () => {
+      const result = await getReleaseLine(
+        ...getChangeset(
+          "ticket: https://stacc-as.atlassian.net/browse/PRO-142",
+          data.commit,
+          true,
+          "- ✨ **Feature**: New thing\n- 🐛 **Bug**: Fix thing",
+        )
+      );
+      expect(result).toContain("- ✨ **Feature**: New thing (");
+      expect(result).toContain("[PRO-142]");
+      expect(result).toContain("- 🐛 **Bug**: Fix thing");
+    });
+  });
+
   describe.skip("multiple changes", () => {
     it("should only show credits after last change", async () => {
       // First change

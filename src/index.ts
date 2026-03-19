@@ -97,7 +97,8 @@ async function getReleaseLine(
       : undefined);
 
   // Build the release line in the requested format
-  let result = `- ${firstLine}`;
+  // If the body already uses markdown list syntax, preserve it instead of nesting
+  let result = firstLine.startsWith("- ") ? firstLine : `- ${firstLine}`;
 
   // Append reference links: PR and/or Jira
   const refs: string[] = [];
@@ -120,7 +121,11 @@ async function getReleaseLine(
   }
 
   if (futureLines.length > 0) {
-    result += "\n" + futureLines.map((line) => "  " + line).join("\n");
+    result +=
+      "\n" +
+      futureLines
+        .map((line) => (line.startsWith("- ") ? line : "  " + line))
+        .join("\n");
   }
 
   return result;
