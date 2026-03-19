@@ -1,0 +1,23 @@
+.changeset/fix-list-formatting.md
+  988668c0927ddcb8 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "5f7e8c83314c3c6de70ee38edd60b50d03766942",
+  "prompts": {
+    "988668c0927ddcb8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "500ce29a-e6ff-420b-af7a-bd99b60b61f5",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Rein Undheim <reinu@stacc.com>",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 0,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    }
+  }
+}
