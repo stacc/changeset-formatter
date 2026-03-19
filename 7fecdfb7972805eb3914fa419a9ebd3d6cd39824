@@ -1,0 +1,25 @@
+src/index.ts
+  988668c0927ddcb8 100-101,127
+src/index.test.ts
+  988668c0927ddcb8 183-237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.15",
+  "base_commit_sha": "7fecdfb7972805eb3914fa419a9ebd3d6cd39824",
+  "prompts": {
+    "988668c0927ddcb8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "500ce29a-e6ff-420b-af7a-bd99b60b61f5",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Rein Undheim <reinu@stacc.com>",
+      "messages": [],
+      "total_additions": 62,
+      "total_deletions": 2,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    }
+  }
+}
