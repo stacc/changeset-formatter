@@ -1,5 +1,11 @@
 # @stacc/changeset-formatter
 
+## 0.2.2
+
+### Patch Changes
+
+- fix: preserve markdown list formatting in changelog output. Changeset descriptions using `- item` syntax no longer get double-nested as `- - item`. ([#23](https://github.com/stacc/changeset-formatter/pull/23))
+
 ## 0.2.1
 
 ### Patch Changes
